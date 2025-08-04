@@ -3,8 +3,8 @@
     <!-- Include app settings and user preferences -->
     <include domain="sharedpref" path="."/>
     
-    <!-- Exclude temporary and cache files -->
-    <exclude domain="file" path="temp/"/>
-    <exclude domain="cache" path="."/>
-    <exclude domain="no_backup" path="."/>
+    <!-- Include app files but exclude specific directories -->
+    <include domain="file" path="."/>
+    <exclude domain="file" path="temp"/>
+    <exclude domain="file" path="cache"/>
 </full-backup-content>
