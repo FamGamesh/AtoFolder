@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Include app settings and user preferences -->
+    <include domain="sharedpref" path="."/>
+    
+    <!-- Exclude temporary and cache files -->
+    <exclude domain="file" path="temp/"/>
+    <exclude domain="cache" path="."/>
+    <exclude domain="no_backup" path="."/>
+</full-backup-content>

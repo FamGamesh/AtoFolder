@@ -1,0 +1,8 @@
+# Note: This is a placeholder for gradle-wrapper.jar
+# 
+# To get the actual gradle-wrapper.jar file:
+# 1. Download from: https://services.gradle.org/distributions/gradle-5.6.4-bin.zip
+# 2. Extract gradle-5.6.4/lib/gradle-wrapper-5.6.4.jar
+# 3. Rename to gradle-wrapper.jar and place in this directory
+#
+# Alternatively, run 'gradle wrapper' command in project root to generate this file automatically

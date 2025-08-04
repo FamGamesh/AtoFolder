@@ -1,0 +1,242 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Fix Gradle Wrapper
+      run: |
+        echo "Fixing Gradle Wrapper..."
+        rm -f gradle/wrapper/gradle-wrapper.jar
+        mkdir -p gradle/wrapper
+        curl -L -o gradle/wrapper/gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar"
+        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+          wget -O gradle/wrapper/gradle-wrapper.jar "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar"
+        fi
+        cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
+        distributionBase=GRADLE_USER_HOME
+        distributionPath=wrapper/dists
+        distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
+        zipStoreBase=GRADLE_USER_HOME
+        zipStorePath=wrapper/dists
+        EOF
+        chmod +x gradlew
+        echo "Gradle wrapper fixed successfully"
+
+    - name: Create Missing Android Resources
+      run: |
+        echo "Creating missing Android resources..."
+        
+        # Install ImageMagick for icon generation
+        sudo apt-get update
+        sudo apt-get install -y imagemagick
+        
+        # Create mipmap directories
+        mkdir -p app/src/main/res/mipmap-hdpi
+        mkdir -p app/src/main/res/mipmap-mdpi
+        mkdir -p app/src/main/res/mipmap-xhdpi
+        mkdir -p app/src/main/res/mipmap-xxhdpi
+        mkdir -p app/src/main/res/mipmap-xxxhdpi
+        
+        # Create a simple launcher icon if it doesn't exist
+        if [ ! -f "app/src/main/res/mipmap-mdpi/ic_launcher.png" ]; then
+          echo "Generating launcher icons..."
+          
+          # Create a folder-themed icon (blue with white folder icon)
+          convert -size 48x48 xc:"#2196F3" \
+                  -fill white -gravity center \
+                  -pointsize 16 -weight bold -annotate 0 "📁" \
+                  app/src/main/res/mipmap-mdpi/ic_launcher.png
+          
+          # Generate different sizes
+          convert app/src/main/res/mipmap-mdpi/ic_launcher.png -resize 72x72 app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert app/src/main/res/mipmap-mdpi/ic_launcher.png -resize 96x96 app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert app/src/main/res/mipmap-mdpi/ic_launcher.png -resize 144x144 app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert app/src/main/res/mipmap-mdpi/ic_launcher.png -resize 192x192 app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          
+          echo "Generated launcher icons successfully"
+        fi
+        
+        # Create values directory
+        mkdir -p app/src/main/res/values
+        
+        # Create complete colors.xml with all required colors
+        echo "Creating comprehensive colors.xml..."
+        cat > app/src/main/res/values/colors.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <!-- Primary Colors -->
+            <color name="primary">#2196F3</color>
+            <color name="primary_dark">#1976D2</color>
+            <color name="primary_blue">#2196F3</color>
+            <color name="primary_blue_dark">#1976D2</color>
+            
+            <!-- Accent Colors -->
+            <color name="accent">#FF5722</color>
+            <color name="accent_orange">#FF5722</color>
+            
+            <!-- Background Colors -->
+            <color name="background_primary">#FAFAFA</color>
+            <color name="background_secondary">#FFFFFF</color>
+            
+            <!-- Text Colors -->
+            <color name="primary_text">#212121</color>
+            <color name="secondary_text">#757575</color>
+            <color name="text_white">#FFFFFF</color>
+            
+            <!-- Standard Colors -->
+            <color name="white">#FFFFFF</color>
+            <color name="black">#000000</color>
+            <color name="gray">#9E9E9E</color>
+            <color name="light_gray">#F5F5F5</color>
+            <color name="dark_gray">#424242</color>
+            
+            <!-- Status Colors -->
+            <color name="success">#4CAF50</color>
+            <color name="warning">#FFC107</color>
+            <color name="error">#F44336</color>
+            <color name="info">#2196F3</color>
+            
+            <!-- Material Design Colors -->
+            <color name="purple_200">#FFBB86FC</color>
+            <color name="purple_500">#FF6200EE</color>
+            <color name="purple_700">#FF3700B3</color>
+            <color name="teal_200">#FF03DAC5</color>
+            <color name="teal_700">#FF018786</color>
+        </resources>
+        EOF
+        
+        # Create strings.xml if it doesn't exist
+        if [ ! -f "app/src/main/res/values/strings.xml" ]; then
+          echo "Creating strings.xml..."
+          cat > app/src/main/res/values/strings.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <string name="app_name">Auto Folder Deleter</string>
+            
+            <!-- Main Activity Strings -->
+            <string name="select_folders">SELECT FOLDERS</string>
+            <string name="start_service">START SERVICE</string>
+            <string name="stop_service">STOP SERVICE</string>
+            <string name="settings">SETTINGS</string>
+            <string name="save_settings">SAVE SETTINGS</string>
+            
+            <!-- Status Strings -->
+            <string name="service_running">Service Status: RUNNING</string>
+            <string name="service_stopped">Service Status: STOPPED</string>
+            <string name="no_folders_selected">No folders selected</string>
+            
+            <!-- Settings Strings -->
+            <string name="deletion_interval">Deletion Interval (days)</string>
+            <string name="deletion_time">Deletion Time</string>
+            <string name="selected_folders">Selected Folders</string>
+            
+            <!-- Messages -->
+            <string name="grant_permissions">Please grant all required permissions</string>
+            <string name="select_at_least_one_folder">Please select at least one folder</string>
+            <string name="service_started">Folder deletion service started</string>
+            <string name="service_stopped_msg">Folder deletion service stopped</string>
+            <string name="settings_saved">Settings Saved</string>
+            
+            <!-- Permissions -->
+            <string name="permission_storage_title">Storage Permission Required</string>
+            <string name="permission_storage_message">This app needs storage permission to delete folders</string>
+            <string name="permission_battery_title">Battery Optimization</string>
+            <string name="permission_battery_message">Please disable battery optimization for reliable service operation</string>
+        </resources>
+        EOF
+        fi
+        
+        # Check existing style/theme files to avoid duplicates
+        echo "Checking for existing style files..."
+        if [ -f "app/src/main/res/values/styles.xml" ]; then
+          echo "Found existing styles.xml - keeping existing file"
+        elif [ -f "app/src/main/res/values/themes.xml" ]; then
+          echo "Found existing themes.xml - keeping existing file"
+        else
+          echo "No theme files found, creating basic styles.xml..."
+          cat > app/src/main/res/values/styles.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+                <item name="colorPrimary">@color/primary_blue</item>
+                <item name="colorPrimaryDark">@color/primary_blue_dark</item>
+                <item name="colorAccent">@color/accent_orange</item>
+                <item name="android:textColorPrimary">@color/primary_text</item>
+                <item name="android:textColorSecondary">@color/secondary_text</item>
+                <item name="android:windowBackground">@color/background_primary</item>
+            </style>
+            
+            <!-- Button Styles -->
+            <style name="AppTheme.Button" parent="Widget.AppCompat.Button">
+                <item name="android:textColor">@color/text_white</item>
+                <item name="android:background">@color/primary_blue</item>
+            </style>
+            
+            <!-- Card Styles -->
+            <style name="AppTheme.Card" parent="CardView">
+                <item name="cardBackgroundColor">@color/background_secondary</item>
+                <item name="cardElevation">4dp</item>
+                <item name="cardCornerRadius">8dp</item>
+            </style>
+        </resources>
+        EOF
+        fi
+        
+        echo "Android resources setup completed successfully"
+        
+    - name: List Created Resources
+      run: |
+        echo "=== Created/Found Resources ==="
+        echo "Mipmap directories:"
+        ls -la app/src/main/res/mipmap-*/ 2>/dev/null || echo "No mipmap directories found"
+        echo "Values directory:"
+        ls -la app/src/main/res/values/ 2>/dev/null || echo "No values directory found"
+        echo "Colors.xml content:"
+        head -20 app/src/main/res/values/colors.xml 2>/dev/null || echo "No colors.xml found"
+        echo "=== End Resource Listing ==="
+        
+    - name: Test Gradle Wrapper
+      run: |
+        echo "Testing Gradle wrapper..."
+        ./gradlew --version
+      
+    - name: Cache Gradle dependencies  
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+        
+    - name: Build debug APK
+      run: ./gradlew assembleDebug
+      
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk-${{ github.run_number }}
+        path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30

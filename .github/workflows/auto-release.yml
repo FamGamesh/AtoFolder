@@ -1,0 +1,74 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.version-check.outputs.changed }}
+      new-version: ${{ steps.version-check.outputs.version }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+        
+    - name: Check version change
+      id: version-check
+      run: |
+        # Get current version from build.gradle
+        CURRENT_VERSION=$(grep 'versionName' app/build.gradle | sed 's/.*"\(.*\)".*/\1/')
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Get previous version (if exists)
+        git checkout HEAD~1 -- app/build.gradle 2>/dev/null || echo "No previous version"
+        PREVIOUS_VERSION=$(grep 'versionName' app/build.gradle 2>/dev/null | sed 's/.*"\(.*\)".*/\1/' || echo "none")
+        echo "Previous version: $PREVIOUS_VERSION"
+        
+        # Restore current version
+        git checkout HEAD -- app/build.gradle
+        
+        if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "Version unchanged: $CURRENT_VERSION"
+        fi
+
+  create-release:
+    needs: check-version
+    if: needs.check-version.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ needs.check-version.outputs.new-version }}
+        name: Auto Folder Deleter v${{ needs.check-version.outputs.new-version }}
+        body: |
+          ## Auto Folder Deleter v${{ needs.check-version.outputs.new-version }}
+          
+          Automatically created release due to version change.
+          
+          ### Download
+          The APK will be available shortly after this release is created.
+          
+          ### Changes
+          - Version bumped to ${{ needs.check-version.outputs.new-version }}
+          
+          Built with GitHub Actions
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

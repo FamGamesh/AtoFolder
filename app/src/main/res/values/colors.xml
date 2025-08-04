@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Original Material Design colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Primary Blue Colors -->
+    <color name="primary_blue">#2196F3</color>
+    <color name="primary_blue_dark">#1976D2</color>
+    <color name="primary_blue_light">#BBDEFB</color>
+    
+    <!-- Danger Red Colors -->
+    <color name="danger_red">#F44336</color>
+    <color name="danger_red_dark">#D32F2F</color>
+    
+    <!-- Success Green Colors -->
+    <color name="success_green">#4CAF50</color>
+    <color name="success_green_dark">#388E3C</color>
+    
+    <!-- Accent Orange Colors -->
+    <color name="accent_orange">#FF9800</color>
+    <color name="accent_orange_dark">#F57C00</color>
+    
+    <!-- Gray Colors -->
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray_medium">#E0E0E0</color>
+    <color name="divider_color">#DDDDDD</color>
+    
+    <!-- Background Colors -->
+    <color name="background_primary">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="gradient_start">#6A11CB</color>
+    <color name="gradient_end">#2575FC</color>
+    
+    <!-- Text Colors -->
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+</resources>

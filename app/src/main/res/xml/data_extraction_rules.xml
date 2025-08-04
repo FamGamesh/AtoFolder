@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <!-- Allow cloud backup of user settings -->
+    <cloud-backup>
+        <include domain="sharedpref" path="."/>
+    </cloud-backup>
+    
+    <!-- Allow device transfer of app data -->
+    <device-transfer>
+        <include domain="sharedpref" path="."/>
+        <include domain="file" path="settings/"/>
+    </device-transfer>
+</data-extraction-rules>
